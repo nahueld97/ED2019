@@ -3,6 +3,7 @@ package TDAArbol;
 import java.util.Iterator;
 
 import TDALista.ElementIterator;
+import TDALista.EmptyListException;
 import TDALista.ListaDobleEnlace;
 import TDALista.Position;
 import TDALista.PositionList;
@@ -60,92 +61,194 @@ public class Arbol<E> implements Tree<E> {
 	}
 
 	public E replace(Position<E> v, E e) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return null;
+		Tnodo<E> posicion = checkPosition(v);
+		E toRet = v.element();
+		posicion.setElement(e);
+		return toRet;
 	}
 
-	@Override
+	private Tnodo<E> checkPosition(Position<E> v) throws InvalidPositionException {
+		if(isEmpty()) throw new InvalidPositionException("Posicion invalida (Arbol vacio)");
+		if(v == null) throw new InvalidPositionException("Posicion invalida (nula)");
+		try {
+		return (Tnodo<E>) v;
+		}catch (ClassCastException e) {
+			e.printStackTrace();
+			throw new InvalidPositionException("Posicion invalida");
+		}
+	}
+
 	public Position<E> root() throws EmptyTreeException {
-		// TODO Auto-generated method stub
-		return null;
+		if (isEmpty()) throw new EmptyTreeException("no se puede pedir la raiz a un arbol vacio");
+		return root;
 	}
 
-	@Override
 	public Position<E> parent(Position<E> v) throws InvalidPositionException, BoundaryViolationException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Iterable<Position<E>> children(Position<E> v) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean isInternal(Position<E> v) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isExternal(Position<E> v) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isRoot(Position<E> v) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void createRoot(E e) throws InvalidOperationException {
-		// TODO Auto-generated method stub
+		Tnodo<E> posicion = checkPosition(v);
+		if (posicion == root) throw new BoundaryViolationException("padre de la raiz");
 		
+		return posicion.getParent();
 	}
 
-	@Override
+	public Iterable<Position<E>> children(Position<E> v) throws InvalidPositionException {
+		Tnodo<E> posicion = checkPosition(v);
+		PositionList<Position<E>> toRet = new ListaDobleEnlace<Position<E>>();
+		for (Tnodo<E> h : posicion.getChildren()) {
+			toRet.addLast(h);
+		}
+		return toRet;
+	}
+
+	public boolean isInternal(Position<E> v) throws InvalidPositionException {
+		return !isExternal(v);
+	}
+
+	public boolean isExternal(Position<E> v) throws InvalidPositionException {
+		Tnodo<E> posicion = checkPosition(v);
+		return posicion.getChildren().isEmpty();
+	}
+
+	public boolean isRoot(Position<E> v) throws InvalidPositionException {
+		Tnodo<E> posicion = checkPosition(v);
+
+		return posicion == root;
+	}
+
+	public void createRoot(E e) throws InvalidOperationException {
+		if (!isEmpty()) throw new InvalidOperationException("este arbol ya posee una raiz");
+		Tnodo<E> nuevo = new Tnodo<E>(e);
+		root = nuevo;
+		size++;
+	}
+
 	public Position<E> addFirstChild(Position<E> p, E e) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return null;
+		Tnodo<E> posicion = checkPosition(p);
+		Tnodo<E> nuevo = new Tnodo<E>(e,posicion);
+		posicion.getChildren().addFirst(nuevo);
+		size++;
+		return nuevo;
 	}
 
-	@Override
 	public Position<E> addLastChild(Position<E> p, E e) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return null;
+		Tnodo<E> posicion = checkPosition(p);
+		Tnodo<E> nuevo = new Tnodo<E>(e,posicion);
+		posicion.getChildren().addLast(nuevo);
+		size++;
+		return nuevo;
 	}
 
-	@Override
 	public Position<E> addBefore(Position<E> p, Position<E> rb, E e) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return null;
+		Tnodo<E> padre = checkPosition(p);
+		Tnodo<E> hermanoD = checkPosition(rb);
+		Tnodo<E> nuevo = new Tnodo<E>(e,padre);
+		
+		Iterator<Position<Tnodo<E>>> hijos = padre.getChildren().positions().iterator();
+		Position<Tnodo<E>> cursor = null;
+		boolean encontre = false;
+		while (hijos.hasNext() && !encontre) {
+			cursor = hijos.next();
+			if (cursor.element() == hermanoD) {
+				encontre=true;
+				padre.getChildren().addBefore(cursor, nuevo);
+				size++;
+			}
+		}
+		if (!encontre) throw new InvalidPositionException("las posiciones dadas no son padre e hijo");
+		
+		return nuevo;
 	}
 
 	@Override
 	public Position<E> addAfter(Position<E> p, Position<E> lb, E e) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		return null;
+		Tnodo<E> padre = checkPosition(p);
+		Tnodo<E> hermanoI = checkPosition(lb);
+		Tnodo<E> nuevo = new Tnodo<E>(e,padre);
+		
+		Iterator<Position<Tnodo<E>>> hijos = padre.getChildren().positions().iterator();
+		Position<Tnodo<E>> cursor = null;
+		boolean encontre = false;
+		while (hijos.hasNext() && !encontre) {
+			cursor = hijos.next();
+			if (cursor.element() == hermanoI) {
+				encontre=true;
+				padre.getChildren().addAfter(cursor, nuevo);
+				size++;
+			}
+		}
+		if (!encontre) throw new InvalidPositionException("las posiciones dadas no son padre e hijo");
+		
+		return nuevo;
 	}
 
-	@Override
 	public void removeExternalNode(Position<E> p) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		
+		Tnodo<E> posicion = checkPosition(p);
+		if(isInternal(p)) throw new InvalidPositionException("nodo interno");
+		if(!isRoot(p)) {
+			Tnodo<E> padre = posicion.getParent();
+
+			Iterator<Position<Tnodo<E>>> hijos = padre.getChildren().positions().iterator();
+			Position<Tnodo<E>> cursor = null;
+			boolean encontre = false;
+			while (hijos.hasNext() && !encontre) {
+				cursor = hijos.next();
+				if (cursor.element() == posicion) {
+					encontre=true;
+					padre.getChildren().remove(cursor);
+					size--;
+				}
+			}
+			if (!encontre) throw new InvalidPositionException("arbol corrupto");
+
+		}else {
+			root=null;
+			size--;
+		}
+		posicion.setParent(null);
+		posicion.setElement(null);
 	}
 
-	@Override
 	public void removeInternalNode(Position<E> p) throws InvalidPositionException {
-		// TODO Auto-generated method stub
+		Tnodo<E> posicion = checkPosition(p);
+		if(isExternal(p)) throw new InvalidPositionException("nodo externo");
 		
+		if (isRoot(p)) {
+			if(posicion.getChildren().size()>1) {
+				throw new InvalidPositionException("se intenta borrar la raiz con mas de un hijo");
+			}
+			try {
+				Position<Tnodo<E>> hijo = posicion.getChildren().first();
+				root = hijo.element();
+				posicion.getChildren().remove(hijo);
+				root.setParent(null);
+				posicion.setElement(null);
+			} catch (EmptyListException e) {
+				e.printStackTrace();
+				throw new InvalidPositionException("arbol corrupto");
+			}
+		}else {
+			try {
+				Position<Tnodo<E>> hijo = posicion.getChildren().first();
+				posicion.setElement(hijo.element().element());
+				for(Tnodo<E> h: hijo.element().getChildren()) {
+					h.setParent(posicion);
+					posicion.getChildren().addBefore(hijo, h);
+				}
+				posicion.getChildren().remove(hijo);
+			} catch (EmptyListException e) {
+				e.printStackTrace();
+				throw new InvalidPositionException("arbol corrupto");
+			}
+		}
+		size--;
 	}
 
-	@Override
 	public void removeNode(Position<E> p) throws InvalidPositionException {
-		// TODO Auto-generated method stub
-		
+		checkPosition(p);
+		if(isExternal(p)) {
+			removeExternalNode(p);
+		}else {
+			removeInternalNode(p);
+		}
 	}
 
 }

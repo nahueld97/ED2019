@@ -226,16 +226,22 @@ public class Arbol<E> implements Tree<E> {
 				throw new InvalidPositionException("arbol corrupto");
 			}
 		}else {
-			try {
-				Position<Tnodo<E>> hijo = posicion.getChildren().first();
-				posicion.setElement(hijo.element().element());
-				for(Tnodo<E> h: hijo.element().getChildren()) {
-					h.setParent(posicion);
-					posicion.getChildren().addBefore(hijo, h);
+			Tnodo<E> padre = posicion.getParent();
+			Iterator<Position<Tnodo<E>>> hijosPadre = padre.getChildren().positions().iterator();
+			boolean encontre = false;
+			Position<Tnodo<E>> aux = null;
+			while (hijosPadre.hasNext() && !encontre) {
+				aux = hijosPadre.next();
+				if(aux.element().equals(posicion)){
+					encontre = true;
+					for(Tnodo<E> hijo:posicion.getChildren()){
+						hijo.setParent(padre);
+						padre.getChildren().addBefore(aux, hijo);
+					}
+					padre.getChildren().remove(aux);
 				}
-				posicion.getChildren().remove(hijo);
-			} catch (EmptyListException e) {
-				e.printStackTrace();
+			}
+			if(!encontre) {
 				throw new InvalidPositionException("arbol corrupto");
 			}
 		}

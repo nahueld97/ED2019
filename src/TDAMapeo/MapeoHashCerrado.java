@@ -1,6 +1,7 @@
 package TDAMapeo;
-import Lista.*;
-import Cola.*;
+import TDALista.*;
+import TDACola.*;
+import exceptions.*;
 
 public class MapeoHashCerrado<K,V> implements Map<K,V>
 {
@@ -188,7 +189,6 @@ public class MapeoHashCerrado<K,V> implements Map<K,V>
 			catch (EmptyQueueException h)
 			{}
 		}
-		System.out.println("rehash");
 	}
 	
 	private int codigoH(K key)
